@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 const app = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 3000;
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 // Middleware
@@ -26,6 +26,7 @@ async function run() {
     await client.connect();
 
     const coffeeCollection = client.db("coffeeDB").collection("coffee");
+    const userCollection = client.db("coffeeDB").collection("user");
 
     app.get("/coffee", async (req, res) => {
       const cursor = coffeeCollection.find();
@@ -71,6 +72,40 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await coffeeCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    //user realated APIS
+
+    app.get("/user", async (req, res) => {
+      const cursor = userCollection.find();
+      const users = await cursor.toArray();
+      res.send(users);
+    });
+
+    app.post("/user", async (req, res) => {
+      const user = req.body;
+      console.log(user);
+      const result = await userCollection.insertOne(user);
+      res.send(result);
+    });
+
+    app.patch("/user", async (req, res) => {
+      const user = req.body;
+      const filter = { email: user.email };
+      const updatedDoc = {
+        $set: {
+          lastLoggedAt: user.lastLoggedAt,
+        },
+      };
+      const result = await userCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    });
+
+    app.delete("/user/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await userCollection.deleteOne(query);
       res.send(result);
     });
 
